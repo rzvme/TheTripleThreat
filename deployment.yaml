@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tttguildhub
+  namespace: tttguildhub
+  labels:
+    app: tttguildhub
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tttguildhub
+  template:
+    metadata:
+      labels:
+        app: tttguildhub
+    spec:
+      containers:
+      - name: tttguildhubcnt
+        image: thorgate.local:5000/tttguildhub:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "250m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tttguildhub
+  namespace: tttguildhub
+spec:
+  selector:
+    app: tttguildhub
+  type: ClusterIP  # Change to ClusterIP as you're using Ingress
+  ports:
+  - protocol: TCP
+    port: 80       # Change to standard HTTP port
+    targetPort: 80  # Keep targeting your app's port
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tttguildhub-ingress-http
+  namespace:  tttguildhub
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  rules:
+  - host: thetriplethreat.silvermoon.guildhub.eu
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tttguildhub
+            port:
+              number: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tttguildhub-ingress-https
+  namespace: tttguildhub
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Use the issuer name from your test certificate
+spec:
+  tls:
+  - hosts:
+    - thetriplethreat.silvermoon.guildhub.eu
+    secretName: tttguildhub-tls
+  rules:
+  - host: thetriplethreat.silvermoon.guildhub.eu
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: tttguildhub
+            port:
+              number: 80
