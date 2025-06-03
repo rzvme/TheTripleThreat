@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Triple Threat - Silvermoon EU</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Light mode - Bastion inspired */
+            --primary-bg: #f5f8fc;
+            --secondary-bg: rgba(255, 255, 255, 0.85);
+            --accent-bg: rgba(232, 242, 255, 0.8);
+            --primary-teal: #5a9bc4;
+            --secondary-teal: #4a90c2;
+            --primary-blue: #6ba3d6;
+            --secondary-blue: #4a90c2;
+            --text-dark: #1a1f2e;
+            --text-muted: #5a6c7d;
+            --border-color: #d1dce6;
+            --shadow-light: rgba(107, 163, 214, 0.1);
+            --gradient-primary: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(232, 242, 255, 0.85) 100%);
+            --gradient-accent: linear-gradient(135deg, #5a9bc4 0%, #4a90c2 100%);
+            --gradient-blue: linear-gradient(135deg, #6ba3d6 0%, #4a90c2 100%);
+        }
+
+        [data-theme="dark"] {
+            /* Dark mode */
+            --primary-bg: #0a0e1a;
+            --secondary-bg: rgba(26, 31, 46, 0.85);
+            --accent-bg: rgba(42, 52, 65, 0.8);
+            --primary-teal: #7bb3d9;
+            --secondary-teal: #6ba3d6;
+            --primary-blue: #6ba3d6;
+            --secondary-blue: #4a90c2;
+            --text-dark: #e8e9ed;
+            --text-muted: #a8b2c8;
+            --border-color: #3a4553;
+            --shadow-light: rgba(123, 179, 217, 0.1);
+            --gradient-primary: linear-gradient(135deg, rgba(26, 31, 46, 0.9) 0%, rgba(42, 52, 65, 0.85) 100%);
+            --gradient-accent: linear-gradient(135deg, #7bb3d9 0%, #6ba3d6 100%);
+            --gradient-blue: linear-gradient(135deg, #6ba3d6 0%, #4a90c2 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+            position: relative;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Bastion background overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(107, 163, 214, 0.25) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(90, 155, 196, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 70%, rgba(74, 144, 194, 0.22) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(123, 179, 217, 0.18) 0%, transparent 50%),
+                linear-gradient(135deg, 
+                    rgba(107, 163, 214, 0.08) 0%, 
+                    rgba(90, 155, 196, 0.12) 25%, 
+                    rgba(74, 144, 194, 0.06) 50%, 
+                    rgba(123, 179, 217, 0.1) 75%, 
+                    rgba(107, 163, 214, 0.05) 100%
+                );
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        [data-theme="dark"] body::before {
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(107, 163, 214, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(90, 155, 196, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 70%, rgba(74, 144, 194, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(123, 179, 217, 0.06) 0%, transparent 50%),
+                linear-gradient(135deg, 
+                    rgba(107, 163, 214, 0.03) 0%, 
+                    rgba(90, 155, 196, 0.05) 25%, 
+                    rgba(74, 144, 194, 0.02) 50%, 
+                    rgba(123, 179, 217, 0.04) 75%, 
+                    rgba(107, 163, 214, 0.02) 100%
+                );
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--secondary-bg);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 2px solid var(--border-color);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 2px 20px var(--shadow-light);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary-teal);
+            background: var(--shadow-light);
+            transform: translateY(-1px);
+        }
+
+        /* Theme toggle button */
+        .theme-toggle {
+            background: var(--gradient-blue);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 1rem;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px var(--shadow-light);
+        }
+
+        /* Mobile menu toggle */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text-dark);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Main content */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Hero section */
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            background: var(--gradient-primary);
+            border-radius: 16px;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            background: var(--gradient-accent);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero .subtitle {
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero .guild-info {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .guild-stat {
+            text-align: center;
+        }
+
+        .guild-stat .number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-teal);
+            display: block;
+        }
+
+        .guild-stat .label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Page sections */
+        .page {
+            display: none;
+            padding: 2rem 0;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .section {
+            background: var(--gradient-primary);
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px var(--shadow-light);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px var(--shadow-light);
+        }
+
+        .section h2 {
+            color: var(--primary-teal);
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+        }
+
+        .section h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: var(--accent-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-dark);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(107, 163, 214, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .btn {
+            background: var(--gradient-blue);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px var(--shadow-light);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(107, 163, 214, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        /* Events */
+        .event-card {
+            background: var(--accent-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .event-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--gradient-blue);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .event-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--primary-blue);
+            box-shadow: 0 8px 25px var(--shadow-light);
+        }
+
+        .event-card:hover::before {
+            transform: scaleY(1);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .event-title {
+            color: var(--primary-teal);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .event-date {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .event-type {
+            background: var(--gradient-blue);
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(107, 163, 214, 0.3);
+        }
+
+        /* Grid layout for recruitment form */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-grid .form-group.full-width {
+            grid-column: 1/-1;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: var(--secondary-bg);
+                flex-direction: column;
+                padding: 1rem;
+                border-top: 1px solid var(--border-color);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .guild-info {
+                gap: 1.5rem;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .event-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+
+            main {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">The Triple Threat</div>
+            <button class="menu-toggle" onclick="toggleMenu()">☰</button>
+            <div style="display: flex; align-items: center;">
+                <ul class="nav-links" id="navLinks">
+                    <li><a href="#" onclick="showPage('home')" class="active">Home</a></li>
+                    <li><a href="#" onclick="showPage('recruitment')">Recruitment</a></li>
+                    <li><a href="#" onclick="showPage('events')">Events</a></li>
+                </ul>
+                <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">
+                    <span id="themeIcon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Home Page -->
+        <div id="home" class="page active">
+            <div class="hero">
+                <h1>The Triple Threat</h1>
+                <div class="subtitle">Elite Guild • Silvermoon EU • Raiding Excellence</div>
+                <div class="guild-info">
+                    <div class="guild-stat">
+                        <span class="number">3</span>
+                        <span class="label">Years Active</span>
+                    </div>
+                    <div class="guild-stat">
+                        <span class="number">50+</span>
+                        <span class="label">Active Members</span>
+                    </div>
+                    <div class="guild-stat">
+                        <span class="number">2</span>
+                        <span class="label">Raid Teams</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>About The Triple Threat</h2>
+                <p>Welcome to The Triple Threat, one of Silvermoon EU's premier raiding guilds. We are a community of dedicated players who believe in excellence, teamwork, and having fun while conquering the most challenging content World of Warcraft has to offer.</p>
+                <br>
+                <p>Our guild combines serious progression raiding with a friendly, supportive atmosphere. Whether you're a seasoned veteran or looking to step up your raiding game, The Triple Threat provides the perfect environment to grow and succeed.</p>
+            </div>
+
+            <div class="section">
+                <h2>What We Offer</h2>
+                <h3>🗡️ Competitive Raiding</h3>
+                <p>Two dedicated raid teams tackling Mythic difficulty content with structured progression and professional leadership.</p>
+                
+                <h3>🏆 Achievement Hunting</h3>
+                <p>Regular achievement runs, mount farming, and completion of challenging content across all aspects of the game.</p>
+                
+                <h3>🎮 Community Events</h3>
+                <p>Fun guild activities including races, treasure hunts, transmog competitions, and seasonal celebrations.</p>
+                
+                <h3>📚 Player Development</h3>
+                <p>Mentorship programs, class guidance, and resources to help you improve your gameplay and reach your potential.</p>
+            </div>
+
+            <div class="section">
+                <h2>Raid Schedule</h2>
+                <p><strong>Team Alpha:</strong> Tuesday, Thursday, Sunday - 20:00-23:00 Server Time</p>
+                <p><strong>Team Beta:</strong> Wednesday, Friday, Saturday - 19:30-22:30 Server Time</p>
+                <br>
+                <p>All raid times are in Central European Time (CET). We maintain a 95% attendance expectation and provide a professional raiding environment with clear expectations and goals.</p>
+            </div>
+        </div>
+
+        <!-- Recruitment Page -->
+        <div id="recruitment" class="page">
+            <div class="section">
+                <h2>Join The Triple Threat</h2>
+                <p>Are you ready to take your raiding to the next level? The Triple Threat is always looking for skilled, dedicated players to join our ranks. We value commitment, skill, and positive attitude above all else.</p>
+            </div>
+
+            <div class="section">
+                <h2>Current Recruitment Needs</h2>
+                <h3>High Priority</h3>
+                <p>🔥 <strong>Restoration Shaman</strong> - Experienced healer for Team Alpha</p>
+                <p>🔥 <strong>Death Knight (DPS)</strong> - Mythic-ready DPS for Team Beta</p>
+                
+                <h3>Medium Priority</h3>
+                <p>⚡ <strong>Mage</strong> - Any spec, preference for Arcane/Fire</p>
+                <p>⚡ <strong>Warrior (DPS)</strong> - Fury/Arms for backup roster</p>
+                
+                <h3>Always Considering</h3>
+                <p>💫 Exceptional players of any class and spec are always welcome to apply</p>
+            </div>
+
+            <div class="section">
+                <h2>Application Form</h2>
+                <form id="recruitmentForm" onsubmit="submitApplication(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="characterName">Character Name *</label>
+                            <input type="text" id="characterName" name="characterName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="discordId">Discord ID *</label>
+                            <input type="text" id="discordId" name="discordId" placeholder="username#1234" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="class">Class *</label>
+                            <select id="class" name="class" required>
+                                <option value="">Select your class</option>
+                                <option value="Death Knight">Death Knight</option>
+                                <option value="Demon Hunter">Demon Hunter</option>
+                                <option value="Druid">Druid</option>
+                                <option value="Evoker">Evoker</option>
+                                <option value="Hunter">Hunter</option>
+                                <option value="Mage">Mage</option>
+                                <option value="Monk">Monk</option>
+                                <option value="Paladin">Paladin</option>
+                                <option value="Priest">Priest</option>
+                                <option value="Rogue">Rogue</option>
+                                <option value="Shaman">Shaman</option>
+                                <option value="Warlock">Warlock</option>
+                                <option value="Warrior">Warrior</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="spec">Main Specialization *</label>
+                            <input type="text" id="spec" name="spec" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="itemLevel">Current Item Level</label>
+                            <input type="number" id="itemLevel" name="itemLevel" min="400" max="500">
+                        </div>
+                        <div class="form-group">
+                            <label for="experience">Raiding Experience</label>
+                            <select id="experience" name="experience">
+                                <option value="Normal">Normal Raider</option>
+                                <option value="Heroic">Heroic Raider</option>
+                                <option value="Mythic">Mythic Raider</option>
+                                <option value="Cutting Edge">Cutting Edge</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="availability">Raid Availability</label>
+                            <textarea id="availability" name="availability" rows="3" placeholder="Which days/times can you raid? Any scheduling conflicts?"></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="motivation">Why do you want to join The Triple Threat?</label>
+                            <textarea id="motivation" name="motivation" rows="4" placeholder="Tell us about your goals and what you're looking for in a guild..."></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label for="logs">Combat Logs (Optional)</label>
+                            <input type="url" id="logs" name="logs" placeholder="Link to WarcraftLogs profile">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn">Submit Application</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Events Page -->
+        <div id="events" class="page">
+            <div class="section">
+                <h2>Upcoming Events</h2>
+                <p>Stay up to date with all guild activities, raids, and special events. Mark your calendars and don't miss out on the action!</p>
+            </div>
+
+            <div class="section">
+                <h2>This Week's Schedule</h2>
+                
+                <div class="event-card">
+                    <div class="event-header">
+                        <div>
+                            <div class="event-title">Mythic Aberrus Progression</div>
+                            <div class="event-date">Tuesday, June 4th • 20:00 CET</div>
+                        </div>
+                        <div class="event-type">Raid</div>
+                    </div>
+                    <p>Team Alpha continues Mythic progression. Working on Rashok mechanics and positioning. Flasks and food provided.</p>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-header">
+                        <div>
+                            <div class="event-title">Heroic Farm Run</div>
+                            <div class="event-date">Wednesday, June 5th • 19:30 CET</div>
+                        </div>
+                        <div class="event-type">Raid</div>
+                    </div>
+                    <p>Team Beta heroic clear for gear and practice. Great opportunity for new members to learn encounters. Alt-friendly!</p>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-header">
+                        <div>
+                            <div class="event-title">Goldshire Racing Championship</div>
+                            <div class="event-date">Friday, June 7th • 21:00 CET</div>
+                        </div>
+                        <div class="event-type">Fun Event</div>
+                    </div>
+                    <p>Monthly guild race event! Create a level 1 character and race from Goldshire to Stormwind. Prizes for top 3 finishers!</p>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-header">
+                        <div>
+                            <div class="event-title">Mount Farming: Invincible</div>
+                            <div class="event-date">Saturday, June 8th • 18:00 CET</div>
+                        </div>
+                        <div class="event-type">Achievement</div>
+                    </div>
+                    <p>Weekly ICC run for Invincible mount. All members welcome - we'll help you get your Kingslayer achievement too!</p>
+                </div>
+
+                <div class="event-card">
+                    <div class="event-header">
+                        <div>
+                            <div class="event-title">Mythic Aberrus Progression</div>
+                            <div class="event-date">Sunday, June 9th • 20:00 CET</div>
+                        </div>
+                        <div class="event-type">Raid</div>
+                    </div>
+                    <p>Team Alpha weekend session. Extended 4-hour raid for major progression pushes. Optional but encouraged!</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Monthly Highlights</h2>
+                <h3>🏆 June Events</h3>
+                <p><strong>Guild Achievement Push:</strong> Working towards "Glory of the Dragonflight Raider" meta-achievement</p>
+                <p><strong>Transmog Competition:</strong> Theme: "Classic Vanilla" - Show off your old-school style!</p>
+                <p><strong>New Member Welcome Week:</strong> Special integration events for recent recruits</p>
+                
+                <h3>📅 Looking Ahead</h3>
+                <p><strong>July:</strong> Summer guild meetup planning and cross-realm PvP tournaments</p>
+                <p><strong>August:</strong> Pre-patch preparation and alt leveling events</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Theme toggle functionality
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (savedTheme === 'dark') {
+                document.body.setAttribute('data-theme', 'dark');
+                themeIcon.textContent = '☀️';
+            } else {
+                themeIcon.textContent = '🌙';
+            }
+        });
+
+        // Page navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            
+            // Close mobile menu
+            document.getElementById('navLinks').classList.remove('active');
+        }
+
+        // Mobile menu toggle
+        function toggleMenu() {
+            document.getElementById('navLinks').classList.toggle('active');
+        }
+
+        // Form submission
+        function submitApplication(event) {
+            event.preventDefault();
+            
+            // Get form data
+            const formData = new FormData(event.target);
+            const data = Object.fromEntries(formData);
+            
+            // Here you would typically send the data to your backend
+            console.log('Application submitted:', data);
+            
+            // Show success message
+            alert('Thank you for your application! We will review it and contact you on Discord within 48 hours.');
+            
+            // Reset form
+            event.target.reset();
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const nav = document.querySelector('.nav-container');
+            const menu = document.getElementById('navLinks');
+            
+            if (!nav.contains(event.target)) {
+                menu.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
