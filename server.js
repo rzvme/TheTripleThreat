@@ -223,7 +223,7 @@ async function sendToDiscord(applicationData) {
 
 // Routes
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'main.html'));
 });
 
 app.post('/api/application', applicationLimiter, async (req, res) => {
