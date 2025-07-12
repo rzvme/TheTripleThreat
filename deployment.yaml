@@ -39,8 +39,8 @@ spec:
   type: ClusterIP  # Change to ClusterIP as you're using Ingress
   ports:
   - protocol: TCP
-    port: 80       # Change to standard HTTP port
-    targetPort: 80  # Keep targeting your app's port
+    port: 3000       # Change to standard HTTP port
+    targetPort: 3000  # Keep targeting your app's port
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -60,7 +60,7 @@ spec:
           service:
             name: tttguildhub
             port:
-              number: 80
+              number: 3000
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -85,4 +85,4 @@ spec:
           service:
             name: tttguildhub
             port:
-              number: 80
+              number: 3000
