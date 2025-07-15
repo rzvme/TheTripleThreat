@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Discord webhook URL (set this as environment variable)
-const DISCORD_WEBHOOK_URL = process.env.DISCORD_WEBHOOK_URL;
+const DISCORD_WEBHOOK_URL = "<<webhookurl>>";
 
 // In-memory store for rate limiting by IP (in production, use Redis)
 const applicationStore = new Map();
