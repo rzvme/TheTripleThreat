@@ -32,6 +32,9 @@ app.use(helmet({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Apply general rate limiting to all routes
+app.use(generalLimiter);
+
 // Serve static files
 app.use(express.static('.'));
 
@@ -234,7 +237,7 @@ app.get('/main.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'main.js'));
 });
 
-app.post('/api/application', applicationLimiter, async (req, res) => {
+app.post('/api/application', applicationRateLimit, async (req, res) => {
     try {
         // Validate input data
         const errors = validateApplicationData(req.body);
