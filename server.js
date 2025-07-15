@@ -46,14 +46,14 @@ const applicationLimiter = rateLimit({
     legacyHeaders: false,
     keyGenerator: (req) => {
         // Get real IP even behind proxies
-        return req.ip || req.connection.remoteAddress || req.socket.remoteAddress || 
-               (req.connection.socket ? req.connection.socket.remoteAddress : null);
+        return req.ip || req.connection.remoteAddress || req.socket.remoteAddress ||
+            (req.connection.socket ? req.connection.socket.remoteAddress : null);
     },
     store: {
         incr: (key, cb) => {
             const now = Date.now();
             const record = applicationStore.get(key);
-            
+
             if (record && (now - record.timestamp) < 6 * 30 * 24 * 60 * 60 * 1000) {
                 // Still within 6 months
                 cb(null, record.count + 1, record.timestamp);
@@ -75,7 +75,7 @@ const applicationLimiter = rateLimit({
 // Validation functions
 function validateApplicationData(data) {
     const errors = [];
-    
+
     // Character name validation
     if (!data.characterName || typeof data.characterName !== 'string') {
         errors.push('Character name is required');
@@ -84,55 +84,55 @@ function validateApplicationData(data) {
     } else if (!/^[a-zA-Z]+$/.test(data.characterName.trim())) {
         errors.push('Character name can only contain letters');
     }
-    
+
     // Discord ID validation
     if (!data.discordId || typeof data.discordId !== 'string') {
         errors.push('Discord ID is required');
     } else if (!/^.{2,32}#\d{4}$/.test(data.discordId.trim()) && !/^[a-z0-9_.]{2,32}$/.test(data.discordId.trim())) {
         errors.push('Discord ID must be in format "username#1234" or new format "username"');
     }
-    
+
     // Class validation
     const validClasses = ['Death Knight', 'Demon Hunter', 'Druid', 'Evoker', 'Hunter', 'Mage', 'Monk', 'Paladin', 'Priest', 'Rogue', 'Shaman', 'Warlock', 'Warrior'];
     if (!data.class || !validClasses.includes(data.class)) {
         errors.push('Invalid class selected');
     }
-    
+
     // Spec validation
     if (!data.spec || typeof data.spec !== 'string') {
         errors.push('Main specialization is required');
     } else if (!validator.isLength(data.spec.trim(), { min: 2, max: 30 })) {
         errors.push('Specialization must be between 2-30 characters');
     }
-    
+
     // Item level validation (optional)
     if (data.itemLevel && (!validator.isInt(data.itemLevel.toString(), { min: 400, max: 600 }))) {
         errors.push('Item level must be between 400-600');
     }
-    
+
     // Experience validation (optional)
     const validExperience = ['Normal', 'Heroic', 'Mythic', 'Cutting Edge'];
     if (data.experience && !validExperience.includes(data.experience)) {
         errors.push('Invalid experience level');
     }
-    
+
     // Text field validation (prevent XSS and limit length)
     if (data.availability && !validator.isLength(data.availability.trim(), { max: 500 })) {
         errors.push('Availability description is too long (max 500 characters)');
     }
-    
+
     if (data.motivation && !validator.isLength(data.motivation.trim(), { max: 1000 })) {
         errors.push('Motivation description is too long (max 1000 characters)');
     }
-    
+
     // URL validation for logs (optional)
-    if (data.logs && data.logs.trim() && !validator.isURL(data.logs.trim(), { 
+    if (data.logs && data.logs.trim() && !validator.isURL(data.logs.trim(), {
         protocols: ['http', 'https'],
-        require_protocol: true 
+        require_protocol: true
     })) {
         errors.push('Combat logs must be a valid URL');
     }
-    
+
     return errors;
 }
 
@@ -148,7 +148,7 @@ async function sendToDiscord(applicationData) {
         console.log('Discord webhook URL not configured');
         return;
     }
-    
+
     const embed = {
         title: "🆕 New Guild Application",
         color: 0x5a9bc4, // Blue color
@@ -189,7 +189,7 @@ async function sendToDiscord(applicationData) {
             text: "The Triple Threat • Guild Application"
         }
     };
-    
+
     if (applicationData.logs) {
         embed.fields.push({
             name: "📊 Combat Logs",
@@ -197,12 +197,12 @@ async function sendToDiscord(applicationData) {
             inline: false
         });
     }
-    
+
     const payload = {
         username: "Guild Bot",
         embeds: [embed]
     };
-    
+
     try {
         const response = await fetch(DISCORD_WEBHOOK_URL, {
             method: 'POST',
@@ -211,11 +211,11 @@ async function sendToDiscord(applicationData) {
             },
             body: JSON.stringify(payload)
         });
-        
+
         if (!response.ok) {
             throw new Error(`Discord API error: ${response.status}`);
         }
-        
+
         console.log('Application sent to Discord successfully');
     } catch (error) {
         console.error('Failed to send to Discord:', error);
@@ -225,21 +225,27 @@ async function sendToDiscord(applicationData) {
 
 // Routes
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.sendFile(path.join(__dirname, 'main.html'));
+});
+app.get('/main.css', (req, res) => {
+    res.sendFile(path.join(__dirname, 'main.css'));
+});
+app.get('/main.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'main.js'));
 });
 
 app.post('/api/application', applicationLimiter, async (req, res) => {
     try {
         // Validate input data
         const errors = validateApplicationData(req.body);
-        
+
         if (errors.length > 0) {
             return res.status(400).json({
                 success: false,
                 errors: errors
             });
         }
-        
+
         // Sanitize data
         const sanitizedData = {
             characterName: sanitizeText(req.body.characterName),
@@ -252,27 +258,27 @@ app.post('/api/application', applicationLimiter, async (req, res) => {
             motivation: sanitizeText(req.body.motivation),
             logs: req.body.logs ? sanitizeText(req.body.logs) : null
         };
-        
+
         // Send to Discord
         await sendToDiscord(sanitizedData);
-        
+
         // Log the application (in production, save to database)
         const logEntry = {
             timestamp: new Date().toISOString(),
             ip: req.ip,
             data: sanitizedData
         };
-        
+
         console.log('New application received:', logEntry);
-        
+
         res.json({
             success: true,
             message: 'Application submitted successfully! We will review it and contact you on Discord within 48 hours.'
         });
-        
+
     } catch (error) {
         console.error('Application submission error:', error);
-        
+
         res.status(500).json({
             success: false,
             message: 'An error occurred while processing your application. Please try again later.'
