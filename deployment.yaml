@@ -68,6 +68,8 @@ metadata:
   name: tttguildhub-ingress-https
   namespace: tttguildhub
   annotations:
+    nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
+    nginx.ingress.kubernetes.io/proxy-real-ip-cidr: "0.0.0.0/0"
     kubernetes.io/ingress.class: traefik
     cert-manager.io/cluster-issuer: "letsencrypt-prod"  # Use the issuer name from your test certificate
 spec:

@@ -8,6 +8,9 @@ const fs = require('fs').promises;
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy - IMPORTANT for K3s/ingress environments
+app.set('trust proxy', true);
+
 // Discord webhook URL (set this as environment variable)
 const DISCORD_WEBHOOK_URL = "<<webhookurl>>";
 
@@ -38,6 +41,15 @@ const generalLimiter = rateLimit({
     max: 100, // Limit each IP to 100 requests per windowMs
     message: {
         error: 'Too many requests from this IP, please try again later.'
+    },
+    keyGenerator: (req) => {
+        // Use the same IP detection logic
+        return req.ip ||
+            req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+            req.headers['x-real-ip'] ||
+            req.headers['cf-connecting-ip'] ||
+            req.connection.remoteAddress ||
+            'unknown';
     }
 });
 
@@ -49,8 +61,20 @@ app.use(express.static('.'));
 
 // Custom rate limiting middleware for applications
 function applicationRateLimit(req, res, next) {
-    const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress ||
-        (req.connection.socket ? req.connection.socket.remoteAddress : null) || 'unknown';
+    // Get real client IP from headers set by ingress/proxy
+    const clientIP = req.ip ||
+        req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+        req.headers['x-real-ip'] ||
+        req.headers['cf-connecting-ip'] || // Cloudflare
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        'unknown';
+
+    console.log(`Rate limit check for IP: ${clientIP}, Headers:`, {
+        'x-forwarded-for': req.headers['x-forwarded-for'],
+        'x-real-ip': req.headers['x-real-ip'],
+        'req.ip': req.ip
+    });
 
     const now = Date.now();
     const sixMonthsInMs = 6 * 30 * 24 * 60 * 60 * 1000; // 6 months in milliseconds
@@ -242,6 +266,7 @@ app.get('/main.css', (req, res) => {
 app.get('/main.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'main.js'));
 });
+
 app.post('/api/application', applicationRateLimit, async (req, res) => {
     try {
         // Validate input data
