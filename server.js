@@ -11,9 +11,6 @@ const PORT = process.env.PORT || 3000;
 // Discord webhook URL (set this as environment variable)
 const DISCORD_WEBHOOK_URL = "<<webhookurl>>";
 
-// In-memory store for rate limiting by IP (in production, use Redis)
-const applicationStore = new Map();
-
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
@@ -32,48 +29,57 @@ app.use(helmet({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// In-memory store for rate limiting by IP (in production, use Redis)
+const applicationStore = new Map();
+
+// General rate limiting for other endpoints
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: {
+        error: 'Too many requests from this IP, please try again later.'
+    }
+});
+
 // Apply general rate limiting to all routes
 app.use(generalLimiter);
 
 // Serve static files
 app.use(express.static('.'));
 
-// Rate limiting for form submissions
-const applicationLimiter = rateLimit({
-    windowMs: 6 * 30 * 24 * 60 * 60 * 1000, // 6 months
-    max: 1, // 1 application per IP per 6 months
-    message: {
-        error: 'You have already submitted an application recently. Please wait 6 months before submitting another application.'
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-    keyGenerator: (req) => {
-        // Get real IP even behind proxies
-        return req.ip || req.connection.remoteAddress || req.socket.remoteAddress ||
-            (req.connection.socket ? req.connection.socket.remoteAddress : null);
-    },
-    store: {
-        incr: (key, cb) => {
-            const now = Date.now();
-            const record = applicationStore.get(key);
+// Custom rate limiting middleware for applications
+function applicationRateLimit(req, res, next) {
+    const clientIP = req.ip || req.connection.remoteAddress || req.socket.remoteAddress ||
+        (req.connection.socket ? req.connection.socket.remoteAddress : null) || 'unknown';
 
-            if (record && (now - record.timestamp) < 6 * 30 * 24 * 60 * 60 * 1000) {
-                // Still within 6 months
-                cb(null, record.count + 1, record.timestamp);
-            } else {
-                // New record or expired
-                applicationStore.set(key, { count: 1, timestamp: now });
-                cb(null, 1, now);
-            }
-        },
-        decrement: (key) => {
-            // Don't decrement for applications
-        },
-        resetKey: (key) => {
-            applicationStore.delete(key);
-        }
+    const now = Date.now();
+    const sixMonthsInMs = 6 * 30 * 24 * 60 * 60 * 1000; // 6 months in milliseconds
+
+    const record = applicationStore.get(clientIP);
+
+    if (record && (now - record.timestamp) < sixMonthsInMs) {
+        // Still within 6 months since last application
+        const timeLeft = sixMonthsInMs - (now - record.timestamp);
+        const daysLeft = Math.ceil(timeLeft / (24 * 60 * 60 * 1000));
+
+        console.log(`Rate limit hit for IP ${clientIP}. Days left: ${daysLeft}`);
+
+        return res.status(429).json({
+            success: false,
+            message: `You have already submitted an application recently. Please wait ${daysLeft} more days before submitting another application.`,
+            error: 'RATE_LIMITED'
+        });
     }
-});
+
+    // Record this submission
+    applicationStore.set(clientIP, {
+        timestamp: now,
+        submissions: (record?.submissions || 0) + 1
+    });
+
+    console.log(`Application allowed for IP ${clientIP}`);
+    next();
+}
 
 // Validation functions
 function validateApplicationData(data) {
@@ -236,7 +242,6 @@ app.get('/main.css', (req, res) => {
 app.get('/main.js', (req, res) => {
     res.sendFile(path.join(__dirname, 'main.js'));
 });
-
 app.post('/api/application', applicationRateLimit, async (req, res) => {
     try {
         // Validate input data
