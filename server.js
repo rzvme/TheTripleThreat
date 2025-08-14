@@ -139,8 +139,8 @@ function validateApplicationData(data) {
     }
 
     // Item level validation (optional)
-    if (data.itemLevel && (!validator.isInt(data.itemLevel.toString(), { min: 400, max: 600 }))) {
-        errors.push('Item level must be between 400-600');
+    if (data.itemLevel && (!validator.isInt(data.itemLevel.toString(), { min: 400, max: 730 }))) {
+        errors.push('Item level must be between 400-730');
     }
 
     // Experience validation (optional)
