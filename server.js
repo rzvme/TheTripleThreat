@@ -96,10 +96,10 @@ function applicationRateLimit(req, res, next) {
     }
 
     // Record this submission
-    applicationStore.set(clientIP, {
-        timestamp: now,
-        submissions: (record?.submissions || 0) + 1
-    });
+    //applicationStore.set(clientIP, {
+    //    timestamp: now,
+    //    submissions: (record?.submissions || 0) + 1
+    //});
 
     console.log(`Application allowed for IP ${clientIP}`);
     next();
